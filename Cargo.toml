@@ -2,7 +2,7 @@
 edition = "2021"
 name = "ecstasy"
 version = "0.3.4"
-authors = ["AXAz0r <thealeksaradovic@gmail.com>", "Autist69420 <enp7s1@tutanota.com>"]
+authors = ["AXAz0r <thealeksaradovic@gmail.com>", "Autist69420 <enp7s1@tutanota.com>", "TinnedTime <timetinned@gmail.com>"]
 keywords = ["image", "scrapper", "gallery"]
 license = "GPL-3.0"
 readme = "README.md"
