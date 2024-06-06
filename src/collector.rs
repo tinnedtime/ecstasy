@@ -12,11 +12,12 @@ use crate::collectors::danbooru::DanbooruCollector;
 use crate::collectors::hypnohub::HypnohubCollector;
 use crate::collectors::safebooru::SafebooruCollector;
 use crate::collectors::bleachbooru::BleachbooruCollector;
+use crate::collectors::reddit::RedditCollector;
 
 use crate::error::EcstasyError;
 use crate::item::EcstasyItem;
 use crate::manifest::{EcstasyManifest, EcstasyManifestItem};
-use crate::params::EcstasyParams;
+use crate::params::{EcstasyFilter, EcstasyParams};
 use crate::stats::StatsContainer;
 use crate::utility::EcstasyUtility;
 
@@ -60,7 +61,7 @@ pub trait EcstasyCollector {
         debug!("{} API: {}", &self.name(), &api);
         api
     }
-    fn collect(&self, tags: Vec<String>, pagelimit: &u64) -> Result<Vec<EcstasyItem>, EcstasyError>;
+    fn collect(&self, filter: EcstasyFilter) -> Result<Vec<EcstasyItem>, EcstasyError>;
 }
 
 pub struct CollectorCore {
@@ -85,6 +86,7 @@ impl CollectorCore {
             HypnohubCollector::boxed(),
             SafebooruCollector::boxed(),
             BleachbooruCollector::boxed(),
+            RedditCollector::boxed()
         ];
         Self {
             stats,
@@ -96,14 +98,18 @@ impl CollectorCore {
     pub fn collect(&mut self) -> Vec<EcstasyItem> {
         info!(
             "Searching for {} on {}.",
-            &self.params.tags.join(", "),
+            &self.params.ecstasy_filter.tags.join(", "),
             &self.params.sources.join(", ")
+        );
+        info!(
+            "Searching on subreddits {}",
+            &self.params.ecstasy_filter.subreddits.join(", ")
         );
         let mut items = Vec::new();
         for collector in &self.collectors {
             for source in &self.params.sources {
                 if source == collector.id() || source == collector.name() || source == "all" {
-                    let collected = match collector.collect((&self.params.tags).to_owned(), &self.params.pagelimit) {
+                    let collected = match collector.collect((&self.params.ecstasy_filter).to_owned()) {
                         Ok(clctd) => clctd,
                         Err(why) => {
                             error!(

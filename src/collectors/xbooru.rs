@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::error::EcstasyError;
 use log::{debug, info};
+use crate::params::EcstasyFilter;
 
 #[derive(Clone, Debug, Default)]
 pub struct XBooruCollector;
@@ -43,14 +44,14 @@ impl EcstasyCollector for XBooruCollector {
         "pid"
     }
 
-    fn collect(&self, tags: Vec<String>, pagelimit: &u64) -> Result<Vec<EcstasyItem>, EcstasyError> {
+    fn collect(&self, filter: EcstasyFilter) -> Result<Vec<EcstasyItem>, EcstasyError> {
         info!("Starting {} collector...", &self.name());
         let mut items = Vec::new();
         let mut page = 0u64;
         let mut finished = false;
         while !finished {
             debug!("Grabbing page with Reqwest GET...");
-            let joined_tags = tags.clone().join("+");
+            let joined_tags = filter.tags.clone().join("+");
             let mut resp = reqwest::get(&self.api_by_page(joined_tags, page))?;
             debug!("Reading the page body as text...");
             let body = resp.text()?;
@@ -85,12 +86,12 @@ impl EcstasyCollector for XBooruCollector {
                 for post in posts.posts {
                     items.push(EcstasyItem::new(
                         post.file_url,
-                        tags.clone(),
+                        filter.tags.clone(),
                         self.id().to_owned(),
                     ));
                 }
 
-                if &page >= pagelimit {
+                if page >= filter.pagelimit {
                     finished = true;
                     info!("Pagelimit hit at {}, stopping collection.", &page);
                 }

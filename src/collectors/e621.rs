@@ -3,6 +3,7 @@ use crate::error::EcstasyError;
 use crate::item::EcstasyItem;
 use log::{debug, info};
 use serde::{Deserialize, Serialize};
+use crate::params::EcstasyFilter;
 
 #[derive(Clone, Debug, Default)]
 pub struct E621Collector;
@@ -41,14 +42,14 @@ impl EcstasyCollector for E621Collector {
         "page"
     }
 
-    fn collect(&self, tags: Vec<String>, pagelimit: &u64) -> Result<Vec<EcstasyItem>, EcstasyError> {
+    fn collect(&self, filter: EcstasyFilter) -> Result<Vec<EcstasyItem>, EcstasyError> {
         info!("Starting {} collector...", &self.name());
         let mut items = Vec::new();
         let mut page = 1u64; // starts at 1
         let mut finished = false;
         while !finished {
             debug!("Grabbing page with Reqwest GET...");
-            let joined_tags = tags.clone().join("+");
+            let joined_tags = filter.tags.clone().join("+");
             let mut resp = reqwest::get(&self.api_by_page(joined_tags, page))?;
             debug!("Reading the page body as text...");
             let body = resp.text()?;
@@ -79,11 +80,11 @@ impl EcstasyCollector for E621Collector {
                 for post in posts {
                     let url = post.file.url.unwrap_or_else(|| "".to_owned());
                     if !url.is_empty() {
-                        items.push(EcstasyItem::new(url, tags.clone(), self.id().to_owned()));
+                        items.push(EcstasyItem::new(url, filter.tags.clone(), self.id().to_owned()));
                     }
                 }
 
-                if &page >= pagelimit {
+                if page >= filter.pagelimit {
                     finished = true;
                     info!("Pagelimit hit at {}, stopping collection.", &page);
                 }

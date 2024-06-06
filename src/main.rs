@@ -21,7 +21,8 @@ fn main() -> Result<(), EcstasyError> {
     if params.insane {
         warn!("Insanity mode enabled! I really hope you know what you're doing...");
     }
-    if params.tags.is_empty() && !params.insane {
+    if params.ecstasy_filter.is_empty() && !params.insane {
+        // TODO: handle reddit insanity
         error!(
             "{} {}",
             "Leaving the tags empty will try to rip every single image from a given source.",
@@ -35,7 +36,12 @@ fn main() -> Result<(), EcstasyError> {
         } else {
             info!("Skipped downloading phase, debugging mode is enabled.");
         }
-        info!("Downloaded {} items with tags: ({})", items.len(), params.tags.join(","));
+        info!(
+            "Downloaded {} items with tags: ({}) or from the subreddits: ({})",
+            items.len(),
+            params.ecstasy_filter.tags.join(", "),
+            params.ecstasy_filter.subreddits.join(", ")
+        );
         info!("All jobs finished, goodbye!");
     }
     Ok(())
